@@ -1,9 +1,9 @@
 #!/bin/bash
 
-SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )" 
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # buildah-rhtap
-source $SCRIPTDIR/common.sh 
+source $SCRIPTDIR/common.sh
 
 
 
@@ -11,10 +11,10 @@ function build() {
 	echo "Running $TASK_NAME:build"
 	echo "Running Login"
 	IMAGE_REGISTRY="${IMAGE%%/*}"
-	buildah login -u $QUAY_IO_CREDS_USR -p $QUAY_IO_CREDS_PSW $IMAGE_REGISTRY
-	ERR=$? 
+	buildah login --username="$QUAY_IO_CREDS_USR" --password="$QUAY_IO_CREDS_PSW" $IMAGE_REGISTRY
+	ERR=$?
 	if [ $ERR != 0 ]; then
-		echo "Failed login $IMAGE_REGISTRY for user $QUAY_IO_CREDS_USR " 
+		echo "Failed buildah login $IMAGE_REGISTRY for user $QUAY_IO_CREDS_USR "
 		exit $ERR
 	fi
 
@@ -28,38 +28,38 @@ function build() {
 	  echo "Cannot find Dockerfile $DOCKERFILE"
 	  exit 1
 	fi
-	
+
 	BUILDAH_ARGS=()
 	if [ -n "${BUILD_ARGS_FILE}" ]; then
 	  BUILDAH_ARGS+=("--build-arg-file=${SOURCE_CODE_DIR}/${BUILD_ARGS_FILE}")
 	fi
-	
+
 	for build_arg in "$@"; do
 	  BUILDAH_ARGS+=("--build-arg=$build_arg")
 	done
-	
+
 	# Build the image
 	buildah build \
 	  "${BUILDAH_ARGS[@]}" \
 	  --tls-verify=$TLSVERIFY \
 	  --ulimit nofile=4096:4096 \
 	  -f "$dockerfile_path" -t $IMAGE $SOURCE_CODE_DIR/$CONTEXT
-	
+
 	# Push the image
 	buildah push \
 	  --tls-verify=$TLSVERIFY \
 	  --retry=5 \
 	  --digestfile $TEMP_DIR/files/image-digest $IMAGE \
 	  docker://$IMAGE
-	
+
 	# Set task results
 	buildah images --format '{{ .Name }}:{{ .Tag }}@{{ .Digest }}' | grep -v $IMAGE > $RESULTS/BASE_IMAGES_DIGESTS
 	cat $TEMP_DIR/files/image-digest | tee $RESULTS/IMAGE_DIGEST
 	echo -n "$IMAGE" | tee $RESULTS/IMAGE_URL
-	
+
 	# Save the image so it can be used in the generate-sbom step
 	buildah push "$IMAGE" oci:$TEMP_DIR/files/image
-	 
+
 }
 
 function generate-sboms() {
@@ -69,23 +69,29 @@ function generate-sboms() {
 }
 
 function upload-sbom() {
-	echo "Running $TASK_NAME:upload-sbom" 
+	echo "Running $TASK_NAME:upload-sbom"
+	cosign login --username="$QUAY_IO_CREDS_USR" --password="$QUAY_IO_CREDS_PSW" $IMAGE_REGISTRY
+	ERR=$?
+	if [ $ERR != 0 ]; then
+		echo "Failed cosign login $IMAGE_REGISTRY for user $QUAY_IO_CREDS_USR "
+		exit $ERR
+	fi
 	cosign attach sbom --sbom $TEMP_DIR/files/sbom-cyclonedx.json --type cyclonedx "$IMAGE"
 }
-function delim() { 
+function delim() {
 	printf '=%.0s' {1..8}
 }
-# Task Steps 
+# Task Steps
 build
 delim
 generate-sboms
 delim
 echo "RUNNING PYTHON "
-python3 $SCRIPTDIR/merge-sboms.sh
+RESULT_PATH="$RESULTS/SBOM_BLOB_URL" python3 $SCRIPTDIR/merge_sboms.py
 # check error from python
-ERR=$? 
+ERR=$?
 if [ $ERR != 0 ]; then
-	echo "Failed in step merge-sboms.sh" 
+	echo "Failed in step merge_sboms.py"
 	exit $ERR
 fi
 

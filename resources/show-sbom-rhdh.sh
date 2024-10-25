@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )" 
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # show-sbom-rhdh
 source $SCRIPTDIR/common.sh
@@ -17,7 +17,7 @@ function show-sbom() {
 	  echo "SBOM_EYECATCHER_BEGIN"
 	  cosign download sbom $IMAGE_URL 2>>$RESULTS/err
 	  status=$?
-	  echo 
+	  echo
 	  echo "SBOM_EYECATCHER_END"
 	  if [ "$status" -eq 0 ]; then
 	    break
@@ -29,13 +29,13 @@ function show-sbom() {
 	    cat $RESULTS/err >&2
 		rm $RESULTS/err
 	fi
-	
+
 	# This result will be ignored by RHDH, but having it set is actually necessary for the task to be properly
 	# identified. For now, we're adding the image URL to the result so it won't be empty.
 	echo -n "$IMAGE_URL" > $RESULTS/LINK_TO_SBOM
-	
+
 }
 
-# Task Steps  
+# Task Steps
 show-sbom
 exit_with_success_result

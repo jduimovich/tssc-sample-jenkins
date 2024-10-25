@@ -13,7 +13,7 @@ source $SCRIPTDIR/common.sh
 # tools
 REQUIRED_BINARY="git curl jq yq "
 # build binaries
-REQUIRED_BINARY+="buildah syft cosign "
+REQUIRED_BINARY+="buildah syft cosign ec "
 # runtimes
 REQUIRED_BINARY+="python3 "
 #REQUIRED_BINARY+="buildah-login "
