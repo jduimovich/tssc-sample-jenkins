@@ -36,4 +36,5 @@ echo "Step: $TASK_NAME"
 echo "Results: $RESULTS"
 export PATH=$PATH:/usr/local/bin
 
-source $SCRIPTDIR/env.sh
+# env.sh comes from the users repo in rhtap/env.sh
+source $DIR/rhtap/env.sh
