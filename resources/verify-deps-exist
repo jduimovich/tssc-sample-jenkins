@@ -1,46 +1,46 @@
 SAVE=$SCRIPTDIR
-SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )" 
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 ENV_VARS_MUST_EXIST=$1
 BINARIES_MUST_EXIST=$2
-ANY_ERRORS=false 
+ANY_ERRORS=false
 
-function binary_check () 
+function binary_check ()
 {
   binary=$1
   BINARY=$(which $binary)
   if [ -z $BINARY ]; then
     echo "Error: $binary missing binary"
     ANY_ERRORS=true
-  else  
-    echo "OK: $binary in $BINARY"  
-  fi 
+  else
+    echo "OK: $binary in $BINARY"
+  fi
 }
 
-function env_must_be_defined () 
+function env_must_be_defined ()
 {
-  env_var="$1" 
-  if [ -z "${!env_var}" ]; then
+  env_var="$1"
+  if [ "${!env_var+defined}" != defined ]; then
     echo "Error: $env_var missing definition."
     ANY_ERRORS=true
-  else  
-    echo "OK: $env_var"  
-  fi 
+  else
+    echo "OK: $env_var"
+  fi
 }
 
 echo "ENV vars:"
 for env in $ENV_VARS_MUST_EXIST; do
-  env_must_be_defined $env 
-done 
+  env_must_be_defined $env
+done
 
 echo "Binaries:"
 for env in $BINARIES_MUST_EXIST; do
-  binary_check $env 
-done 
+  binary_check $env
+done
 
 if [ "$ANY_ERRORS" == "true" ]; then
   echo "---------- ERROR -----------------"
-  echo "Errors in configuration above, fix and rerun" 
+  echo "Errors in configuration above, fix and rerun"
   exit 1
 fi
 SCRIPTDIR=$SAVE
