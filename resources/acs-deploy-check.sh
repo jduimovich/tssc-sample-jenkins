@@ -10,10 +10,16 @@ function rox-deploy-check() {
 	#!/usr/bin/env bash
 	set +x
 
+
 	if [ "$DISABLE_ACS" == "true" ]; then
 		echo "DISABLE_ACS is set. No scans will be produced"
 		exit_with_success_result
 	fi
+	if [ "$DISABLE_GITOPS_UPDATE" == "true" ]; then
+		echo "DISABLE_GITOPS_UPDATE is set. No repo update will occur"
+		exit_with_success_result
+	fi
+
 	if [ -z "$ROX_API_TOKEN" ]; then
 		echo "ROX_API_TOKEN is not set, demo will exit with success"
 		exit_with_success_result
