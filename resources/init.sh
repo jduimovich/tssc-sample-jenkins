@@ -45,6 +45,8 @@ fi
 
 # For now, always build.
 function init() {
+    echo "Johns demo of ci testing"
+    
     echo "Running $TASK_NAME:init"
     echo "DEMO $TASK_NAME:init"
     timestamp > $RESULTS/START_TIME
